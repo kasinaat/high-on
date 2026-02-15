@@ -105,6 +105,27 @@ export default function DashboardPage() {
     }
   };
 
+  const handleDeleteOutlet = async (outletId: string) => {
+    if (!confirm("Are you sure you want to delete this outlet? This action cannot be undone and will remove all associated data including orders, delivery agents, and admin assignments.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/outlets/${outletId}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+      if (result.success) {
+        fetchOutlets();
+      } else {
+        alert(result.error || "Failed to delete outlet");
+      }
+    } catch (error) {
+      console.error("Error deleting outlet:", error);
+      alert("Failed to delete outlet");
+    }
+  };
+
   if (isPending) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -242,6 +263,7 @@ export default function DashboardPage() {
                       onManageOutlet={(outlet) =>
                         setManageOutletDialogState({ isOpen: true, outlet })
                       }
+                      onDelete={outlet.isOwner ? handleDeleteOutlet : undefined}
                     />
                   ))}
                 </div>

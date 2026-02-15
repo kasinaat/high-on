@@ -6,14 +6,22 @@ import { useRouter } from "next/navigation";
 interface OutletCardProps {
   outlet: Outlet;
   onManageOutlet?: (outlet: Outlet) => void; // Optional for backward compatibility
+  onDelete?: (outletId: string) => void; // Delete handler for owners
 }
 
-export function OutletCard({ outlet, onManageOutlet }: OutletCardProps) {
+export function OutletCard({ outlet, onManageOutlet, onDelete }: OutletCardProps) {
   const router = useRouter();
   
   const handleManageClick = () => {
     // Use new page route instead of dialog
     router.push(`/outlets/${outlet.id}`);
+  };
+
+  const handleDeleteClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete) {
+      onDelete(outlet.id);
+    }
   };
 
   return (
@@ -94,13 +102,34 @@ export function OutletCard({ outlet, onManageOutlet }: OutletCardProps) {
         </div>
       </div>
 
-      <div className="mt-4 pt-4 border-t border-border">
+      <div className="mt-4 pt-4 border-t border-border flex gap-2">
         <button
           onClick={handleManageClick}
-          className="w-full px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border border-border rounded-lg hover:bg-accent transition-colors"
+          className="flex-1 px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border border-border rounded-lg hover:bg-accent transition-colors"
         >
           Manage Outlet
         </button>
+        {onDelete && (
+          <button
+            onClick={handleDeleteClick}
+            className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
+            title="Delete outlet"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+              />
+            </svg>
+          </button>
+        )}
       </div>
     </div>
   );

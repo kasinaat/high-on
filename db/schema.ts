@@ -154,7 +154,7 @@ export const order = pgTable('order', {
     .references(() => user.id),
   outletId: text('outletId')
     .notNull()
-    .references(() => outlet.id),
+    .references(() => outlet.id, { onDelete: 'cascade' }),
   customerName: text('customerName').notNull(),
   customerPhone: text('customerPhone').notNull(),
   customerEmail: text('customerEmail').notNull(),
