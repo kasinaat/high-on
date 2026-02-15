@@ -34,25 +34,21 @@ export default function CheckoutPage() {
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [notes, setNotes] = useState('');
 
-  // Check authentication
+  // Pre-fill user data if authenticated
   useEffect(() => {
     if (isPending) return;
 
-    if (!session?.user) {
-      // Not authenticated, redirect to sign in
-      const callbackUrl = `/store/${outletId}/checkout`;
-      router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
-      return;
+    if (session?.user) {
+      // Set user data if logged in
+      setCustomerName(session.user.name || '');
+      setCustomerEmail(session.user.email || '');
     }
-
-    // Set user data
-    setCustomerName(session.user.name || '');
-    setCustomerEmail(session.user.email || '');
-  }, [session, isPending, outletId, router]);
+    // Guest checkout is allowed - no redirect needed
+  }, [session, isPending]);
 
   // Load cart and outlet details
   useEffect(() => {
-    if (isPending || !session) return;
+    if (isPending) return;
 
     const loadCheckoutData = async () => {
       try {
@@ -95,7 +91,7 @@ export default function CheckoutPage() {
     };
 
     loadCheckoutData();
-  }, [outletId, router, session, isPending]);
+  }, [outletId, router, isPending]);
 
   const calculateTotal = () => {
     return cart.reduce((total, item) => {
@@ -106,7 +102,7 @@ export default function CheckoutPage() {
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!customerName || !customerPhone || !customerEmail || !deliveryAddress) {
+    if (!customerName || !customerPhone || !deliveryAddress) {
       alert('Please fill in all required fields');
       return;
     }
@@ -152,8 +148,14 @@ export default function CheckoutPage() {
       // Clear cart
       localStorage.removeItem(`cart_${outletId}`);
 
-      alert('Order placed successfully!');
-      router.push('/orders');
+      alert('Order placed successfully! We will contact you shortly.');
+      
+      // Redirect based on auth status
+      if (session?.user) {
+        router.push('/orders');
+      } else {
+        router.push(`/store/${outletId}`);
+      }
     } catch (error: any) {
       console.error('Failed to place order:', error);
       alert(error.message || 'Failed to place order');
@@ -168,10 +170,6 @@ export default function CheckoutPage() {
         <Loader2 className="h-8 w-8 animate-spin text-pink-500" />
       </div>
     );
-  }
-
-  if (!session) {
-    return null;
   }
 
   const total = calculateTotal();
@@ -277,14 +275,14 @@ export default function CheckoutPage() {
 
               <div>
                 <label htmlFor="email" className="block text-sm font-medium mb-1">
-                  Email *
+                  Email {!session && <span className="text-gray-400">(Optional)</span>}
                 </label>
                 <input
                   id="email"
                   type="email"
                   value={customerEmail}
                   onChange={(e) => setCustomerEmail(e.target.value)}
-                  required
+                  required={!!session}
                   className="w-full px-3 py-2 border rounded-md"
                 />
               </div>

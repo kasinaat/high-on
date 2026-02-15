@@ -17,9 +17,7 @@ export async function POST(request: Request) {
   try {
     const session = await auth.api.getSession({ headers: await headers() });
 
-    if (!session?.user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    // Guest checkout is allowed - session is optional
 
     const body = await request.json();
     const {
@@ -33,12 +31,11 @@ export async function POST(request: Request) {
       items,
     } = body;
 
-    // Validate required fields
+    // Validate required fields (email is optional for guests)
     if (
       !outletId ||
       !customerName ||
       !customerPhone ||
-      !customerEmail ||
       !deliveryAddress ||
       !pincode ||
       !items ||
@@ -61,7 +58,7 @@ export async function POST(request: Request) {
       .insert(orderTable)
       .values({
         id: orderId,
-        customerId: session.user.id,
+        customerId: session?.user?.id || null,
         outletId,
         customerName,
         customerPhone,

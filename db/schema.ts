@@ -150,7 +150,6 @@ export const deliveryAgent = pgTable('deliveryAgent', {
 export const order = pgTable('order', {
   id: text('id').primaryKey(),
   customerId: text('customerId')
-    .notNull()
     .references(() => user.id),
   outletId: text('outletId')
     .notNull()

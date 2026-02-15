@@ -29,12 +29,15 @@ export async function GET(
     // Fetch related data for each order
     const ordersWithDetails = await Promise.all(
       ordersData.map(async (o) => {
-        // Get customer info
-        const [customer] = await db
-          .select()
-          .from(user)
-          .where(eq(user.id, o.customerId))
-          .limit(1);
+        // Get customer info if customerId exists (null for guest orders)
+        let customer = null;
+        if (o.customerId) {
+          [customer] = await db
+            .select()
+            .from(user)
+            .where(eq(user.id, o.customerId))
+            .limit(1);
+        }
 
         // Get delivery agent info if assigned
         let agent = null;
