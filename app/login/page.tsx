@@ -1,19 +1,22 @@
 "use client";
 
 import { useSession } from "@/lib/auth-client";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, Suspense } from "react";
 import { GoogleSignInButton } from "@/components/google-signin-button";
 
-export default function LoginPage() {
+function LoginContent() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get('callbackUrl');
 
   useEffect(() => {
     if (session) {
-      router.push("/dashboard");
+      // Redirect to callback URL if provided, otherwise to dashboard
+      router.push(callbackUrl || "/dashboard");
     }
-  }, [session, router]);
+  }, [session, router, callbackUrl]);
 
   if (isPending) {
     return (
@@ -58,5 +61,20 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="mt-4 text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

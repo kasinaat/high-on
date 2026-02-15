@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "High On",
-  description: "High On Application",
+  title: "High on | Vanilla Ice Cream Cups for Events",
+  description: "High on offers single-serve vanilla ice cream cups made with real milk and natural vanilla. A safe, crowd-pleasing dessert solution for events.",
 };
 
 export default function RootLayout({
