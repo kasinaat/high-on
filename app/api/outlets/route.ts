@@ -44,7 +44,12 @@ export async function GET(req: NextRequest) {
 
     // Add isOwner flag to owned outlets
     const ownedOutletsWithFlag = ownedOutlets.map(o => ({ ...o, isOwner: true }));
-    const adminOutletsWithFlag = adminOutlets.map(o => ({ ...o, isOwner: false }));
+    
+    // Filter out admin outlets where user is already the owner to avoid duplicates
+    const ownedOutletIds = new Set(ownedOutlets.map(o => o.id));
+    const adminOutletsWithFlag = adminOutlets
+      .filter(o => !ownedOutletIds.has(o.id))
+      .map(o => ({ ...o, isOwner: false }));
 
     const allOutlets = [...ownedOutletsWithFlag, ...adminOutletsWithFlag];
 
