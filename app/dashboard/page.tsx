@@ -3,7 +3,9 @@
 import { signOut, useSession } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useNotification } from "@/lib/notification-context";
 import { AddOutletDialog } from "@/components/add-outlet-dialog";
+import { EditOutletDialog } from "@/components/edit-outlet-dialog";
 import { InviteAdminDialog } from "@/components/invite-admin-dialog";
 import { ManageOutletDialog } from "@/components/manage-outlet-dialog";
 import { OutletProductsDialog } from "@/components/outlet-products-dialog";
@@ -16,12 +18,17 @@ import type { Outlet, Product } from "@/lib/types";
 export default function DashboardPage() {
   const { data: session, isPending } = useSession();
   const router = useRouter();
+  const { showNotification } = useNotification();
   const [activeTab, setActiveTab] = useState<"outlets" | "products">("outlets");
   const [outlets, setOutlets] = useState<Outlet[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoadingOutlets, setIsLoadingOutlets] = useState(true);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [showAddOutlet, setShowAddOutlet] = useState(false);
+  const [editOutletState, setEditOutletState] = useState<{
+    isOpen: boolean;
+    outlet: Outlet | null;
+  }>({ isOpen: false, outlet: null });
   const [showProductDialog, setShowProductDialog] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [inviteDialogState, setInviteDialogState] = useState<{
@@ -95,13 +102,14 @@ export default function DashboardPage() {
       });
       const result = await response.json();
       if (result.success) {
+        showNotification('success', 'Product deleted successfully');
         fetchProducts();
       } else {
-        alert(result.error || "Failed to delete product");
+        showNotification('error', result.error || 'Failed to delete product');
       }
     } catch (error) {
       console.error("Error deleting product:", error);
-      alert("Failed to delete product");
+      showNotification('error', 'Failed to delete product');
     }
   };
 
@@ -116,13 +124,14 @@ export default function DashboardPage() {
       });
       const result = await response.json();
       if (result.success) {
+        showNotification('success', 'Outlet deleted successfully');
         fetchOutlets();
       } else {
-        alert(result.error || "Failed to delete outlet");
+        showNotification('error', result.error || 'Failed to delete outlet');
       }
     } catch (error) {
       console.error("Error deleting outlet:", error);
-      alert("Failed to delete outlet");
+      showNotification('error', 'Failed to delete outlet');
     }
   };
 
@@ -263,6 +272,7 @@ export default function DashboardPage() {
                       onManageOutlet={(outlet) =>
                         setManageOutletDialogState({ isOpen: true, outlet })
                       }
+                      onEdit={outlet.isOwner ? (outlet) => setEditOutletState({ isOpen: true, outlet }) : undefined}
                       onDelete={outlet.isOwner ? handleDeleteOutlet : undefined}
                     />
                   ))}
@@ -356,6 +366,15 @@ export default function DashboardPage() {
         onClose={() => setShowAddOutlet(false)}
         onSuccess={fetchOutlets}
       />
+
+      {editOutletState.outlet && (
+        <EditOutletDialog
+          isOpen={editOutletState.isOpen}
+          onClose={() => setEditOutletState({ isOpen: false, outlet: null })}
+          onSuccess={fetchOutlets}
+          outlet={editOutletState.outlet}
+        />
+      )}
 
       <ProductDialog
         isOpen={showProductDialog}

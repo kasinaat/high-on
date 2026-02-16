@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { outlet, outletAdmin, invitation } from "@/db/schema";
 import { auth } from "@/lib/auth";
 import { sendInvitationEmail } from "@/lib/email";
+import { geocodeAddress } from "@/lib/geocoding";
 import { eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { CreateOutletInput, ApiResponse, Outlet } from "@/lib/types";
@@ -88,6 +89,30 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    let latitude: string | null = null;
+    let longitude: string | null = null;
+
+    // Prioritize manually entered coordinates
+    if (body.latitude && body.longitude) {
+      const lat = parseFloat(body.latitude);
+      const lon = parseFloat(body.longitude);
+      
+      if (!isNaN(lat) && !isNaN(lon)) {
+        latitude = body.latitude;
+        longitude = body.longitude;
+      }
+    }
+
+    // Fallback to geocoding if manual coordinates not provided or invalid
+    if (!latitude || !longitude) {
+      const coordinates = await geocodeAddress(body.address, body.pincode);
+      
+      if (coordinates) {
+        latitude = coordinates.latitude.toString();
+        longitude = coordinates.longitude.toString();
+      }
+    }
+
     const newOutlet = await db
       .insert(outlet)
       .values({
@@ -96,6 +121,9 @@ export async function POST(req: NextRequest) {
         address: body.address,
         pincode: body.pincode,
         phone: body.phone,
+        latitude,
+        longitude,
+        deliveryRadius: body.deliveryRadius || '10',
         ownerId: session.user.id,
       })
       .returning();

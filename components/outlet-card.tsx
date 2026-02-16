@@ -6,15 +6,23 @@ import { useRouter } from "next/navigation";
 interface OutletCardProps {
   outlet: Outlet;
   onManageOutlet?: (outlet: Outlet) => void; // Optional for backward compatibility
+  onEdit?: (outlet: Outlet) => void; // Edit handler for owners
   onDelete?: (outletId: string) => void; // Delete handler for owners
 }
 
-export function OutletCard({ outlet, onManageOutlet, onDelete }: OutletCardProps) {
+export function OutletCard({ outlet, onManageOutlet, onEdit, onDelete }: OutletCardProps) {
   const router = useRouter();
   
   const handleManageClick = () => {
     // Use new page route instead of dialog
     router.push(`/outlets/${outlet.id}`);
+  };
+
+  const handleEditClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit(outlet);
+    }
   };
 
   const handleDeleteClick = (e: React.MouseEvent) => {
@@ -109,6 +117,27 @@ export function OutletCard({ outlet, onManageOutlet, onDelete }: OutletCardProps
         >
           Manage Outlet
         </button>
+        {onEdit && (
+          <button
+            onClick={handleEditClick}
+            className="px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium border border-border rounded-lg hover:bg-accent transition-colors"
+            title="Edit outlet"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+          </button>
+        )}
         {onDelete && (
           <button
             onClick={handleDeleteClick}

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
+import { useNotification } from '@/lib/notification-context';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import Image from 'next/image';
 
@@ -20,6 +21,7 @@ export default function CheckoutPage() {
   const router = useRouter();
   const outletId = params.id as string;
   const { data: session, isPending } = useSession();
+  const { showNotification } = useNotification();
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [outlet, setOutlet] = useState<any>(null);
@@ -55,14 +57,14 @@ export default function CheckoutPage() {
         // Load cart from localStorage
         const savedCart = localStorage.getItem(`cart_${outletId}`);
         if (!savedCart) {
-          alert('Your cart is empty');
+          showNotification('error', 'Your cart is empty');
           router.push(`/store/${outletId}`);
           return;
         }
 
         const cartData = JSON.parse(savedCart);
         if (!cartData || cartData.length === 0) {
-          alert('Your cart is empty');
+          showNotification('error', 'Your cart is empty');
           router.push(`/store/${outletId}`);
           return;
         }
@@ -84,7 +86,7 @@ export default function CheckoutPage() {
         }
       } catch (error) {
         console.error('Failed to load checkout data:', error);
-        alert('Failed to load checkout data');
+        showNotification('error', 'Failed to load checkout data');
       } finally {
         setIsLoading(false);
       }
@@ -103,12 +105,13 @@ export default function CheckoutPage() {
     e.preventDefault();
 
     if (!customerName || !customerPhone || !deliveryAddress) {
-      alert('Please fill in all required fields');
+      showNotification('error', 'Please fill in all required fields');
       return;
     }
 
+    // Pincode should be available from localStorage (from store selection)
     if (!pincode) {
-      alert('Pincode is required');
+      showNotification('error', 'Unable to determine delivery location. Please go back and select a store.');
       return;
     }
 
@@ -148,7 +151,7 @@ export default function CheckoutPage() {
       // Clear cart
       localStorage.removeItem(`cart_${outletId}`);
 
-      alert('Order placed successfully! We will contact you shortly.');
+      showNotification('success', 'Order placed successfully! We will contact you shortly.');
       
       // Redirect based on auth status
       if (session?.user) {
@@ -158,7 +161,7 @@ export default function CheckoutPage() {
       }
     } catch (error: any) {
       console.error('Failed to place order:', error);
-      alert(error.message || 'Failed to place order');
+      showNotification('error', error.message || 'Failed to place order');
     } finally {
       setIsSubmitting(false);
     }
@@ -299,21 +302,6 @@ export default function CheckoutPage() {
                   rows={3}
                   placeholder="Enter your complete address"
                   className="w-full px-3 py-2 border rounded-md"
-                />
-              </div>
-
-              <div>
-                <label htmlFor="pincode" className="block text-sm font-medium mb-1">
-                  Pincode *
-                </label>
-                <input
-                  id="pincode"
-                  type="text"
-                  value={pincode}
-                  onChange={(e) => setPincode(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border rounded-md"
-                  placeholder="Enter delivery pincode"
                 />
               </div>
 

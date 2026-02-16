@@ -1,27 +1,42 @@
 "use client";
 
-import { useState } from "react";
-import type { CreateOutletInput } from "@/lib/types";
+import { useState, useEffect } from "react";
+import type { UpdateOutletInput, Outlet } from "@/lib/types";
 
-interface AddOutletDialogProps {
+interface EditOutletDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  outlet: Outlet;
 }
 
-export function AddOutletDialog({ isOpen, onClose, onSuccess }: AddOutletDialogProps) {
-  const [formData, setFormData] = useState<CreateOutletInput>({
+export function EditOutletDialog({ isOpen, onClose, onSuccess, outlet }: EditOutletDialogProps) {
+  const [formData, setFormData] = useState<UpdateOutletInput>({
     name: "",
     address: "",
     pincode: "",
     phone: "",
-    adminEmail: "",
     latitude: "",
     longitude: "",
-    deliveryRadius: "10",
+    deliveryRadius: "",
   });
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Initialize form with outlet data when dialog opens
+  useEffect(() => {
+    if (isOpen && outlet) {
+      setFormData({
+        name: outlet.name,
+        address: outlet.address,
+        pincode: outlet.pincode,
+        phone: outlet.phone || "",
+        latitude: outlet.latitude || "",
+        longitude: outlet.longitude || "",
+        deliveryRadius: outlet.deliveryRadius || "10",
+      });
+    }
+  }, [isOpen, outlet]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,8 +44,8 @@ export function AddOutletDialog({ isOpen, onClose, onSuccess }: AddOutletDialogP
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/outlets", {
-        method: "POST",
+      const response = await fetch(`/api/outlets/${outlet.id}`, {
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
@@ -38,11 +53,10 @@ export function AddOutletDialog({ isOpen, onClose, onSuccess }: AddOutletDialogP
       const result = await response.json();
 
       if (result.success) {
-        setFormData({ name: "", address: "", pincode: "", phone: "", adminEmail: "", latitude: "", longitude: "", deliveryRadius: "10" });
         onSuccess();
         onClose();
       } else {
-        setError(result.error || "Failed to create outlet");
+        setError(result.error || "Failed to update outlet");
       }
     } catch (err) {
       setError("An error occurred");
@@ -58,7 +72,7 @@ export function AddOutletDialog({ isOpen, onClose, onSuccess }: AddOutletDialogP
       <div className="bg-white w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl shadow-lg max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b border-border p-4 sm:p-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg sm:text-xl font-bold">Add New Outlet</h2>
+            <h2 className="text-lg sm:text-xl font-bold">Edit Outlet</h2>
             <button
               onClick={onClose}
               className="text-muted-foreground hover:text-foreground transition-colors"
@@ -159,30 +173,13 @@ export function AddOutletDialog({ isOpen, onClose, onSuccess }: AddOutletDialogP
             </p>
           </div>
 
-          <div>
-            <label htmlFor="adminEmail" className="block text-sm font-medium mb-2">
-              Admin Email (Optional)
-            </label>
-            <input
-              id="adminEmail"
-              type="email"
-              value={formData.adminEmail}
-              onChange={(e) => setFormData({ ...formData, adminEmail: e.target.value })}
-              className="w-full px-4 py-2.5 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-ring text-sm sm:text-base"
-              placeholder="admin@example.com"
-            />
-            <p className="text-xs text-muted-foreground mt-2">
-              Invite an admin to manage this outlet. They will receive an email invitation.
-            </p>
-          </div>
-
           <div className="border-t border-border pt-4">
             <div className="mb-3">
               <label className="block text-sm font-medium mb-1">
                 Coordinates (Optional)
               </label>
               <p className="text-xs text-muted-foreground">
-                Add precise location for better store finding. <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get coordinates from Google Maps</a>
+                Update location for better store finding. <a href="https://www.google.com/maps" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Get coordinates from Google Maps</a>
               </p>
             </div>
             
@@ -243,7 +240,7 @@ export function AddOutletDialog({ isOpen, onClose, onSuccess }: AddOutletDialogP
               disabled={isLoading}
               className="flex-1 px-4 py-2.5 text-sm sm:text-base font-medium bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
-              {isLoading ? "Creating..." : "Create Outlet"}
+              {isLoading ? "Updating..." : "Update Outlet"}
             </button>
           </div>
         </form>

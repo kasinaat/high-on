@@ -59,6 +59,9 @@ export const outlet = pgTable('outlet', {
   address: text('address').notNull(),
   pincode: text('pincode').notNull(),
   phone: text('phone'),
+  latitude: decimal('latitude', { precision: 10, scale: 7 }),
+  longitude: decimal('longitude', { precision: 10, scale: 7 }),
+  deliveryRadius: decimal('deliveryRadius', { precision: 5, scale: 2 }).notNull().default('10'),
   ownerId: text('ownerId')
     .notNull()
     .references(() => user.id),

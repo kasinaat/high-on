@@ -45,6 +45,19 @@ export type CreateOutletInput = {
   pincode: string;
   phone?: string;
   adminEmail?: string;
+  latitude?: string;
+  longitude?: string;
+  deliveryRadius?: string;
+};
+
+export type UpdateOutletInput = {
+  name?: string;
+  address?: string;
+  pincode?: string;
+  phone?: string;
+  latitude?: string;
+  longitude?: string;
+  deliveryRadius?: string;
 };
 
 export type InviteAdminInput = {
