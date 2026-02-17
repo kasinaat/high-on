@@ -82,9 +82,10 @@ export default function CheckoutPage() {
           setOutlet(result.data.outlet);
           
           // If no saved pincode from user's search, use outlet's pincode
-          if (!savedPincode && result.data.outlet.pincode) {
-            savedPincode = result.data.outlet.pincode;
-            localStorage.setItem('customer_pincode', result.data.outlet.pincode);
+          const outletPincode = result.data.outlet.pincode;
+          if (!savedPincode && outletPincode) {
+            savedPincode = outletPincode;
+            localStorage.setItem('customer_pincode', outletPincode);
           }
         }
 
