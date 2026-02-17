@@ -71,11 +71,8 @@ export default function CheckoutPage() {
 
         setCart(cartData);
 
-        // Load pincode
-        const savedPincode = localStorage.getItem('pincode');
-        if (savedPincode) {
-          setPincode(savedPincode);
-        }
+        // Load pincode from customer_pincode
+        let savedPincode = localStorage.getItem('customer_pincode');
 
         // Fetch outlet details from menu API
         const response = await fetch(`/api/store/${outletId}/menu`);
@@ -83,6 +80,17 @@ export default function CheckoutPage() {
         const result = await response.json();
         if (result.success && result.data.outlet) {
           setOutlet(result.data.outlet);
+          
+          // If no saved pincode from user's search, use outlet's pincode
+          const outletPincode = result.data.outlet.pincode;
+          if (!savedPincode && outletPincode) {
+            savedPincode = outletPincode;
+            localStorage.setItem('customer_pincode', outletPincode);
+          }
+        }
+
+        if (savedPincode) {
+          setPincode(savedPincode);
         }
       } catch (error) {
         console.error('Failed to load checkout data:', error);
