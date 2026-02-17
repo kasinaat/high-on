@@ -36,8 +36,7 @@ export function ExampleComponent() {
   };
 
   return (
-    <div>
+    
       {/* Your component JSX */}
-    </div>
   );
 }
